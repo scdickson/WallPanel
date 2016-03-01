@@ -148,9 +148,10 @@
 				$(xml).find("streams").each(function() 
 				{
 					var channel_name = $(this).find("channel").find("display_name").text();
-					var channel_img = $(this).find("channel").find("logo").text()
+					var channel_img = $(this).find("channel").find("logo").text();
+					var channel_viewers = $(this).find("viewers").text();
 					
-					channel_list += "<tr><td><img src=\"" + channel_img + "\" width=\"25\" height=\"25\"/></td><td>&nbsp;&nbsp;&nbsp;</td><td>" + channel_name + "</td></tr>";
+					channel_list += "<tr><td><img src=\"" + channel_img + "\" width=\"25\" height=\"25\"/></td><td>&nbsp;&nbsp;&nbsp;</td><td>" + channel_name + "</td><td>&nbsp;&nbsp;&nbsp;</td><td>" + channel_viewers + "</td></tr>";
 				});
 				channel_list += "</table>";
 				document.getElementById('twitch').innerHTML = channel_list;
@@ -405,9 +406,81 @@
 				xml = $.parseXML(data.content);
 				var current_temp = Math.round($(xml).find("main").find("temp").text()) + "\u00B0";
 				var current_icon = $(xml).find("weather").find("icon").text();
+				var current_humidity = Math.round($(xml).find("main").find("humidity").text());
+				var current_wind_speed = Math.round($(xml).find("wind").find("speed").text());
+				var current_wind_direction = parseFloat($(xml).find("wind").find("deg").text());
+				var current_wind_direction_string = "";
 
-				document.getElementById('current_weather').innerHTML = current_temp;
+				if(current_wind_direction >= 11.25 && current_wind_direction < 33.75)
+				{
+					current_wind_direction_string = "NNE";
+				}
+				else if(current_wind_direction >= 33.75 && current_wind_direction < 56.25)
+				{
+					current_wind_direction_string = "NE";
+				}
+				else if(current_wind_direction >= 56.25 && current_wind_direction < 78.75)
+				{
+					current_wind_direction_string = "ENE";
+				}
+				else if(current_wind_direction >= 78.75 && current_wind_direction < 101.25)
+				{
+					current_wind_direction_string = "E";
+				}
+				else if(current_wind_direction >= 101.25 && current_wind_direction < 123.75)
+				{
+					current_wind_direction_string = "ESE";
+				}
+				else if(current_wind_direction >= 123.75 && current_wind_direction < 146.25)
+				{
+					current_wind_direction_string = "SE";
+				}
+				else if(current_wind_direction >= 146.25 && current_wind_direction < 168.75)
+				{
+					current_wind_direction_string = "SSE";
+				}
+				else if(current_wind_direction >= 168.75 && current_wind_direction < 191.25)
+				{
+					current_wind_direction_string = "S";
+				}
+				else if(current_wind_direction >= 191.25 && current_wind_direction < 213.75)
+				{
+					current_wind_direction_string = "SSW";
+				}
+				else if(current_wind_direction >= 213.75 && current_wind_direction < 236.25)
+				{
+					current_wind_direction_string = "SW";
+				}
+				else if(current_wind_direction >= 236.25 && current_wind_direction < 258.75)
+				{
+					current_wind_direction_string = "WSW";
+				}
+				else if(current_wind_direction >= 258.75 && current_wind_direction < 281.25)
+				{
+					current_wind_direction_string = "W";
+				}
+				else if(current_wind_direction >= 281.25 && current_wind_direction < 303.75)
+				{
+					current_wind_direction_string = "WNW";
+				}
+				else if(current_wind_direction >= 303.75 && current_wind_direction < 326.25)
+				{
+					current_wind_direction_string = "NW";
+				}
+				else if(current_wind_direction >= 326.25 && current_wind_direction < 348.75)
+				{
+					current_wind_direction_string = "NNW";
+				}
+				else
+				{
+					current_wind_direction_string = "N";
+				}
+				
+
+				document.getElementById("current_weather").innerHTML = current_temp;
 				document.getElementById("weather_icon").className = "wi " + WEATHER_ICON_TABLE[current_icon];
+				document.getElementById("current_humidity").innerHTML = "<img src=\"images/humidity.png\" align=\"middle\" width=\"30\" height=\"30\"/><font color=\"white\">" + current_humidity + " %</font>";
+				document.getElementById("current_wind").innerHTML = "<img src=\"images/wind.png\" align=\"middle\" width=\"30\" height=\"30\"/><font color=\"white\">" + current_wind_speed + " mph " + current_wind_direction_string + "</font>";
 			}
 
 			function parseForecastWeather(data)
@@ -596,6 +669,9 @@
 					<td>&nbsp;&nbsp;&nbsp;</td>
 					<td><h1><div id="current_weather"></div></h1></td>
 				</tr>
+			</table>
+			<table>
+				<tr><td><div id="current_wind"></div></td><td><div id="current_humidity"></div></td></tr>
 			</table>
 			<hr>
 			<div id="forecast"></div>
