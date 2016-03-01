@@ -6,7 +6,7 @@ To run on Linux:
 `/usr/bin/chromium --kiosk "index.html" &`
 
 To run optional python script:
-`python face.py haarcascade_frontalface_default.xml`
+`python face.py haarcascade_frontalface_default.xml &`
 
 ![Screen](https://raw.githubusercontent.com/scdickson/WallPanel/master/images/screen.png)
 ![Deployment](https://raw.githubusercontent.com/scdickson/WallPanel/master/images/deployment.jpg)

@@ -1,7 +1,6 @@
 var phrases = ['Good to see you again', 'Hello there', 'Hello, Comrade', 
 'Hey, you', 'Looking good today', 'Hey, beautiful', 'Guten Tag', '你好', 
-'Hallo', 'Nice day, isn\'t it', 'You look awesome', 'Hope you\'re having a great day',
-'Shit, bitch - you is fine'];
+'Hallo', 'Nice day, isn\'t it', 'You look awesome', 'Hope you\'re having a great day'];
 
 var punctuation = ['.', '!'];
 
