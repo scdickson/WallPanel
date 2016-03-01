@@ -68,7 +68,8 @@
 			};
 			var DAYS_LIST = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-			var NEWS_RSS_USL = "http://feeds.reuters.com/reuters/topNews";
+			var NEWS_RSS_URL = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss"
+			var NEWS_RSS_URL_ALT = "http://feeds.reuters.com/reuters/topNews"; //replaced by google news RSS but kept just in case...
 			var NEWS_REFRESH_MINS = 60;
 
 			var GOOGLE_API_PUBLIC_KEY = "AIzaSyDrYX6fS5dnlZ_ISX5f49MvKF45lpfNfZ0";
@@ -81,7 +82,9 @@
 			var GOOGLE_MAPS_REFRESH_MINS = 15;
 
 			var CALTRAIN_STATION_NAME = "mountainview";
-			var CALTRAIN_DEPARTURE_REFRESH_MINS = 5;
+			var CALTRAIN_DEPARTURE_REFRESH_MINS = 1;
+			var northbound_train_times;
+			var southbound_train_times;
 
 			var TWITCH_GAME = "Dota 2";
 			var TWITCH_CHANNEL_LIMIT = 8;
@@ -92,10 +95,10 @@
 				startTime();
 				getWeather();
 				getNews();
+				getCaltrainDepartures();
 				getCalendar();
 				getTravelTime();
 				getLiveTwitchStreams();
-				getCaltrainDepartures();
 				//setupFirebase();
 			}
 
@@ -181,8 +184,6 @@
 				{ 
 				    parseCaltrainDepartures(data); 
 				})
-
-				var t = setTimeout(getCaltrainDepartures, CALTRAIN_DEPARTURE_REFRESH_MINS * 60 * 1000);	
 			}
 
 			function parseCaltrainDepartures(data)
@@ -199,9 +200,9 @@
 				}
 
 				var temp = timetable_rows[i].split(",");
-				var northbound_train_times = [];
+				northbound_train_times = [];
+				southbound_train_times = [];
 				var nbtt_index = 0;
-				var southbound_train_times = [];
 				var sbtt_index = 0;
 
 				var time_pm = false;
@@ -323,7 +324,10 @@
 
 				}
 
-				getNextCaltrainsFromNow(northbound_train_times.sort(), southbound_train_times.sort());
+				northbound_train_times.sort();
+				southbound_train_times.sort();
+
+				getNextCaltrainsFromNow(northbound_train_times, southbound_train_times);
 			}
 
 			function getNextCaltrainsFromNow(n_trains, s_trains)
@@ -332,7 +336,7 @@
 				var today = new Date();
 				var hours = today.getHours();
 				var minutes = today.getMinutes();
-				var train_string = "Next Caltrains: "
+				var train_string = "Next Caltrains: ";
 				var time_string = hours + ":" + minutes;
 
 				var i = 0;
@@ -360,8 +364,10 @@
 				train_string += "&nbsp;<img src=\"images/south_arrow.png\" width=\"20\" height=\"20\"/>&nbsp;";
 				train_string += s_trains[i];
 				
-
 				document.getElementById("next_caltrains").innerHTML = train_string;
+				var t = setTimeout(function(){
+					getNextCaltrainsFromNow(northbound_train_times, southbound_train_times);
+				}, CALTRAIN_DEPARTURE_REFRESH_MINS * 60 * 1000);	
 			}
 
 			function stripAlpha(string)
@@ -447,9 +453,12 @@
 
 			function getNews()
 			{
-				xReader(NEWS_RSS_USL, function(data) 
+				xReader(NEWS_RSS_URL, function(data) 
 				{ 
-				    parseNews(data.content.split("<title>")); 
+					if(data.content)
+					{
+				    	parseNews(data.content.split("<title>")); 
+					}
 				})	
 
 				var t = setTimeout(getNews, NEWS_REFRESH_MINS * 60 * 1000);
@@ -460,7 +469,8 @@
 				var news = "";
 				for(i = 3; i < data.length; i++)
 				{
-					news += data[i].substring(0, data[i].indexOf("</title>")) + "&nbsp;\u2022&nbsp;";
+					var headline = data[i].substring(0, data[i].indexOf("</title>"));
+					news += headline.substring(0, headline.indexOf("-")-1) + "&nbsp;\u2022&nbsp;";
 				}
 				document.getElementById('news-content').innerHTML = news;
 			}
@@ -523,7 +533,7 @@
 				    events[i++] = "<li>" + eventLine + " -- " + title + "</li>"; 
 				});
 
-				var current_num_events = 0;
+				/*var current_num_events = 0;
 				for(i = events.length; i >= 0; i--)
 				{
 					if(events[i] && current_num_events <= GOOGLE_CALENDAR_MAX_EVENTS)
@@ -531,9 +541,18 @@
 						event_string += events[i];
 						current_num_events += 1;
 					}
+				}*/
+
+				for(i = 0; i < events.length; i++)
+				{
+					if(i < GOOGLE_CALENDAR_MAX_EVENTS)
+					{
+						event_string += events[i];
+					}
 				}
 
-				events += "</ul>"; 
+
+				event_string += "</ul>"; 
 				document.getElementById('calendar').innerHTML = event_string;
 			}
 
@@ -558,10 +577,6 @@
 				document.getElementById('travel_time').innerHTML = "Estimated Travel Time: " + travel_time;
 			}
 
-			function checkSteamStatus()
-			{
-				
-			}
 		</script>
 	</head>
 
