@@ -40,6 +40,9 @@
 		<script src="js/marquee.js"></script>
 		<script src="js/phrases.js" type="text/javascript" charset="utf-8"></script>
 		<link rel="stylesheet" type="text/css" href="css/weather-icons.css"></link>
+		<link rel="icon" 
+      		type="image/png" 
+      		href="images/icon.png"/>
 
 		<script>
 			var WEATHER_CITY = "Mountain View, US";
@@ -408,6 +411,34 @@
 				var current_icon = $(xml).find("weather").find("icon").text();
 				var current_humidity = Math.round($(xml).find("main").find("humidity").text());
 				var current_wind_speed = Math.round($(xml).find("wind").find("speed").text());
+				
+				var sunrise_date = new Date(parseInt($(xml).find("sys").find("sunrise").text())*1000);
+				var sunset_date = new Date(parseInt($(xml).find("sys").find("sunset").text())*1000);
+				var sunrise_string = "";
+				var sunset_string = "";
+
+				if(sunrise_date.getHours().toString().length != 2)
+				{
+					sunrise_string += "0"
+				}
+				sunrise_string += sunrise_date.getHours() + ":";
+				if(sunrise_date.getMinutes().toString().length != 2)
+				{
+					sunrise_string += "0"
+				}
+				sunrise_string += sunrise_date.getMinutes();
+
+				if(sunset_date.getHours().toString().length != 2)
+				{
+					sunset_string += "0"
+				}
+				sunset_string += sunset_date.getHours() + ":";
+				if(sunset_date.getMinutes().toString().length != 2)
+				{
+					sunset_string += "0"
+				}
+				sunset_string += sunset_date.getMinutes();
+				
 				var current_wind_direction = parseFloat($(xml).find("wind").find("deg").text());
 				var current_wind_direction_string = "";
 
@@ -481,6 +512,7 @@
 				document.getElementById("weather_icon").className = "wi " + WEATHER_ICON_TABLE[current_icon];
 				document.getElementById("current_humidity").innerHTML = "<img src=\"images/humidity.png\" align=\"middle\" width=\"30\" height=\"30\"/><font color=\"white\">" + current_humidity + " %</font>";
 				document.getElementById("current_wind").innerHTML = "<img src=\"images/wind.png\" align=\"middle\" width=\"30\" height=\"30\"/><font color=\"white\">" + current_wind_speed + " mph " + current_wind_direction_string + "</font>";
+				document.getElementById("sun").innerHTML = "<table><tr><td><img src=\"images/sunrise.png\" width=\"75\" height=\"60\"/></td><td>&nbsp;</td><td><img src=\"images/sunset.png\" width=\"75\" height=\"60\"/></td></tr><tr><td align=\"center\"><h4>" + sunrise_string + "</h4></td><td>&nbsp;</td><td align=\"center\"><h4>" + sunset_string + "</h4></td></tr></table>";
 			}
 
 			function parseForecastWeather(data)
@@ -659,6 +691,8 @@
 			<h1><div id="time"></div></h1>
 			<h4><div id="travel_time"></div></h4>
 			<h4><div id="next_caltrains"></div></h4>
+			</br>
+			<h4><div id="sun"></div></h4>
 			</br>
 			<div id="calendar"></div>
 		</div>
