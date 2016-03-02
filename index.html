@@ -341,7 +341,18 @@
 				var hours = today.getHours();
 				var minutes = today.getMinutes();
 				var train_string = "Next Caltrains: ";
-				var time_string = hours + ":" + minutes;
+
+				var time_string = "";
+				if(hours.toString().length != 2)
+				{
+					time_string += "0";
+				}
+				time_string += hours + ":";
+				if(minutes.toString().length != 2)
+				{
+					time_string += "0";
+				}
+				time_string += minutes;
 
 				var i = 0;
 				if(hours <= parseInt(n_trains[n_trains.length-1].substring(0, n_trains[n_trains.length-1].indexOf(":"))))
@@ -352,7 +363,8 @@
 					}
 					
 				}
-
+				
+				console.log(i);
 				train_string += "<img src=\"images/north_arrow.png\" width=\"20\" height=\"20\"/>&nbsp;";
 				train_string += n_trains[i];
 				
