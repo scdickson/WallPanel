@@ -38,20 +38,38 @@
 		<script src="http://kincrew.github.com/xReader/xReader.full.js"></script>
 		<script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
 		<script src="js/marquee.js"></script>
-		<script src="js/skycons.js" type="text/javascript"></script>
 		<script src="js/phrases.js" type="text/javascript" charset="utf-8"></script>
+		<link rel="stylesheet" type="text/css" href="css/weather-icons.css"></link>
 		<link rel="icon" 
       		type="image/png" 
       		href="images/icon.png"/>
 
 		<script>
-			var WEATHER_LAT = "37.4024";
-			var WEATHER_LNG = "-122.0749";
-			var WEATHER_API_KEY = "0b7eba1e7fe449031b6192f787093b49";
-			var WEATHER_MAX_FORECAST_DAYS = 5;
+			var WEATHER_CITY = "Mountain View, US";
+			var WEATHER_UNITS = "imperial";
+			var OPEN_WEATHER_API_KEY = "69af76d71dc68e78a68d0171f1269551";
 			var WEATHER_REFRESH_MINS = 15;
+			var WEATHER_ICON_TABLE = {
+				'01d':'wi-day-sunny',
+				'02d':'wi-day-cloudy',
+				'03d':'wi-cloudy',
+				'04d':'wi-cloudy-windy',
+				'09d':'wi-showers',
+				'10d':'wi-rain',
+				'11d':'wi-thunderstorm',
+				'13d':'wi-snow',
+				'50d':'wi-fog',
+				'01n':'wi-night-clear',
+				'02n':'wi-night-cloudy',
+				'03n':'wi-night-cloudy',
+				'04n':'wi-night-cloudy',
+				'09n':'wi-night-showers',
+				'10n':'wi-night-rain',
+				'11n':'wi-night-thunderstorm',
+				'13n':'wi-night-snow',
+				'50n':'wi-night-alt-cloudy-windy'
+			};
 			var DAYS_LIST = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-			var skycons;
 
 			var NEWS_RSS_URL = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss"
 			var NEWS_RSS_URL_ALT = "http://feeds.reuters.com/reuters/topNews"; //replaced by google news RSS but kept just in case...
@@ -217,7 +235,24 @@
 							schedule_hours -= 12;
 						}
 						
-						var time = normalizeTimeString(schedule_hours, schedule_minutes);
+						var time = "";
+						if(schedule_hours.toString().length != 2)
+						{
+							time += "0" + schedule_hours;
+						}
+						else
+						{
+							time += schedule_hours;
+						}
+						time += ":"
+						if(schedule_minutes.toString().length != 2)
+						{
+							time += "0" + schedule_minutes;
+						}
+						else
+						{
+							time += schedule_minutes;
+						}
 						northbound_train_times[nbtt_index] = time;
 						nbtt_index++;
 					}
@@ -264,7 +299,24 @@
 							schedule_hours -= 12;
 						}
 						
-						var time = normalizeTimeString(schedule_hours, schedule_minutes);
+						var time = "";
+						if(schedule_hours.toString().length != 2)
+						{
+							time += "0" + schedule_hours;
+						}
+						else
+						{
+							time += schedule_hours;
+						}
+						time += ":"
+						if(schedule_minutes.toString().length != 2)
+						{
+							time += "0" + schedule_minutes;
+						}
+						else
+						{
+							time += schedule_minutes;
+						}
 						southbound_train_times[sbtt_index] = time;
 						sbtt_index++;
 					}
@@ -290,7 +342,17 @@
 				var minutes = today.getMinutes();
 				var train_string = "Next Caltrains: ";
 
-				var time_string = normalizeTimeString(hours, minutes);
+				var time_string = "";
+				if(hours.toString().length != 2)
+				{
+					time_string += "0";
+				}
+				time_string += hours + ":";
+				if(minutes.toString().length != 2)
+				{
+					time_string += "0";
+				}
+				time_string += minutes;
 
 				var i = 0;
 				if(hours <= parseInt(n_trains[n_trains.length-1].substring(0, n_trains[n_trains.length-1].indexOf(":"))))
@@ -339,60 +401,56 @@
 
 			function getWeather()
 			{
-				if(!skycons)
-				{
-					skycons = new Skycons();
-				}
-
-				xReader("https://api.forecast.io/forecast/" + WEATHER_API_KEY + "/" + WEATHER_LAT + "," + WEATHER_LNG, function(data) 
+				WEATHER_CITY = WEATHER_CITY.replace(/ /g, "+");
+				xReader("http://api.openweathermap.org/data/2.5/weather?q=" + WEATHER_CITY + "&appid=" + OPEN_WEATHER_API_KEY + "&units=" + WEATHER_UNITS, function(data) 
 				{ 
-				    parseCurrentWeather(data);
+				    parseCurrentWeather(data); 
+				})	
+
+				xReader("http://api.openweathermap.org/data/2.5/forecast/daily?q=" + WEATHER_CITY + "&appid=" + OPEN_WEATHER_API_KEY + "&units=" + WEATHER_UNITS, function(data) 
+				{ 
 				    parseForecastWeather(data); 
-				})
+				})	
 
 				var t = setTimeout(getWeather, WEATHER_REFRESH_MINS * 60 * 1000);
-			}
-
-			function normalizeTimeString(hours, minutes)
-			{
-				var time_string = "";
-
-				if(hours.toString().length != 2)
-				{
-					time_string += "0"
-				}
-				time_string += hours + ":";
-				if(minutes.toString().length != 2)
-				{
-					time_string += "0"
-				}
-				time_string += minutes;
-
-				return time_string;
 			}
 
 			function parseCurrentWeather(data)
 			{
 				xml = $.parseXML(data.content);
-				var current_temp = Math.round($(xml).find("currently").find("temperature").text()) + "\u00B0";
-				var current_icon = $(xml).find("currently").find("icon").text();
-				var current_humidity = parseFloat($(xml).find("currently").find("humidity").text()) * 100;
-
-				var sunrise_date, sunset_date;
-				$(xml).find("daily").find("data").find("sunriseTime").each(function(){
-					sunrise_date = new Date(parseInt($(this).text())*1000);
-					return false;
-				});
-				$(xml).find("daily").find("data").find("sunsetTime").each(function(){
-					sunset_date = new Date(parseInt($(this).text())*1000);
-					return false;
-				});
+				var current_temp = Math.round($(xml).find("main").find("temp").text()) + "\u00B0";
+				var current_icon = $(xml).find("weather").find("icon").text();
+				var current_humidity = Math.round($(xml).find("main").find("humidity").text());
+				var current_wind_speed = Math.round($(xml).find("wind").find("speed").text());
 				
-				var sunrise_string = normalizeTimeString(sunrise_date.getHours(), sunrise_date.getMinutes());
-				var sunset_string = normalizeTimeString(sunset_date.getHours(), sunset_date.getMinutes());
+				var sunrise_date = new Date(parseInt($(xml).find("sys").find("sunrise").text())*1000);
+				var sunset_date = new Date(parseInt($(xml).find("sys").find("sunset").text())*1000);
+				var sunrise_string = "";
+				var sunset_string = "";
 
-				var current_wind_speed = ($(xml).find("currently").find("windSpeed").text());
-				var current_wind_direction = parseFloat($(xml).find("currently").find("windBearing").text());
+				if(sunrise_date.getHours().toString().length != 2)
+				{
+					sunrise_string += "0"
+				}
+				sunrise_string += sunrise_date.getHours() + ":";
+				if(sunrise_date.getMinutes().toString().length != 2)
+				{
+					sunrise_string += "0"
+				}
+				sunrise_string += sunrise_date.getMinutes();
+
+				if(sunset_date.getHours().toString().length != 2)
+				{
+					sunset_string += "0"
+				}
+				sunset_string += sunset_date.getHours() + ":";
+				if(sunset_date.getMinutes().toString().length != 2)
+				{
+					sunset_string += "0"
+				}
+				sunset_string += sunset_date.getMinutes();
+				
+				var current_wind_direction = parseFloat($(xml).find("wind").find("deg").text());
 				var current_wind_direction_string = "";
 
 				if(current_wind_direction >= 11.25 && current_wind_direction < 33.75)
@@ -460,12 +518,12 @@
 					current_wind_direction_string = "N";
 				}
 				
+
 				document.getElementById("current_weather").innerHTML = current_temp;
-				skycons.set(document.getElementById("weather_icon"), current_icon);
-  				skycons.play();
-  				document.getElementById("current_humidity").innerHTML = "<img src=\"images/humidity.png\" align=\"middle\" width=\"25\" height=\"25\"/><font color=\"white\">" + current_humidity + " %</font>";
-  				document.getElementById("current_wind").innerHTML = "<img src=\"images/wind.png\" align=\"middle\" width=\"30\" height=\"30\"/><font color=\"white\">" + current_wind_speed + " mph " + current_wind_direction_string + "</font>";
-  				document.getElementById("sun").innerHTML = "<table><tr><td><img src=\"images/sunrise.png\" width=\"75\" height=\"60\"/></td><td>&nbsp;</td><td><img src=\"images/sunset.png\" width=\"75\" height=\"60\"/></td></tr><tr><td align=\"center\"><h4>" + sunrise_string + "</h4></td><td>&nbsp;</td><td align=\"center\"><h4>" + sunset_string + "</h4></td></tr></table>";
+				document.getElementById("weather_icon").className = "wi " + WEATHER_ICON_TABLE[current_icon];
+				document.getElementById("current_humidity").innerHTML = "<img src=\"images/humidity.png\" align=\"middle\" width=\"30\" height=\"30\"/><font color=\"white\">" + current_humidity + " %</font>";
+				document.getElementById("current_wind").innerHTML = "<img src=\"images/wind.png\" align=\"middle\" width=\"30\" height=\"30\"/><font color=\"white\">" + current_wind_speed + " mph " + current_wind_direction_string + "</font>";
+				document.getElementById("sun").innerHTML = "<table><tr><td><img src=\"images/sunrise.png\" width=\"75\" height=\"60\"/></td><td>&nbsp;</td><td><img src=\"images/sunset.png\" width=\"75\" height=\"60\"/></td></tr><tr><td align=\"center\"><h4>" + sunrise_string + "</h4></td><td>&nbsp;</td><td align=\"center\"><h4>" + sunset_string + "</h4></td></tr></table>";
 			}
 
 			function parseForecastWeather(data)
@@ -477,18 +535,19 @@
 				var current_day = now.getDay();
 				var weather_icon_array = [];
 
-				$(xml).find("daily").find("data").each(function() 
+				$(xml).find("list").find("weather").each(function() 
 				{
 					weather_icon_array[i++] = $(this).find("icon").text();
 				});
 
 				i = 0;
-				$(xml).find("daily").find("data").each(function() 
+				$(xml).find("list").find("temp").each(function() 
 				{
-					if(i > 0 && i <= WEATHER_MAX_FORECAST_DAYS)
+					if(i > 0)
 					{
 						current_day = getNextDay(current_day);
-						forecast_table += "<tr><td>" + DAYS_LIST[current_day] + "&nbsp;&nbsp;</td><td>" + "<canvas id=\"weather_icon_" + i + "\" width=\"20\" height=\"20\"></canvas>" + "&nbsp;&nbsp;</td><td>" + Math.round($(this).find("temperatureMin").text()) + "\u00B0</td><td>|&nbsp;&nbsp;" + Math.round($(this).find("temperatureMax").text()) + "\u00B0</td></tr>";
+
+						forecast_table += "<tr><td>" + DAYS_LIST[current_day] + "&nbsp;&nbsp;</td><td>" + "<i class=\"wi " + WEATHER_ICON_TABLE[weather_icon_array[i]] + "\"></i>&nbsp;&nbsp;</td><td>" + Math.round($(this).find("min").text()) + "\u00B0</td><td>|&nbsp;&nbsp;" + Math.round($(this).find("max").text()) + "\u00B0</td></tr>";
 					}
 
 					i++;
@@ -496,15 +555,6 @@
 
 				forecast_table += "</table>";
 				document.getElementById('forecast').innerHTML = forecast_table;
-
-				for(i = 1; i < weather_icon_array.length; i++)
-				{
-					if(i <= WEATHER_MAX_FORECAST_DAYS)
-					{
-						skycons.set(document.getElementById("weather_icon_" + i), weather_icon_array[i]);
-  						skycons.play();
-  					}
-				}
 			}
 
 			function getNextDay(dayNum)
@@ -660,7 +710,7 @@
 		<div id="weather" style="float: right;">
 			<table border="0">
 				<tr>
-					<td><canvas id="weather_icon" width="110" height="110"></canvas></td>
+					<td><i id="weather_icon"></i></td>
 					<td>&nbsp;&nbsp;&nbsp;</td>
 					<td><h1><div id="current_weather"></div></h1></td>
 				</tr>
