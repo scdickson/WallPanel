@@ -2,16 +2,16 @@
 	Weight
 	Color for display
 	URL of feed
-	[split string, end of title indicator]
-	Position to begin looking for items (removes title of news site and other information at the top of the page)
-	Max number of items to fetch
+	Function in newsParsers.js to handle parsing raw rss
 */
 var MIN_NUM_NEWS_ITEMS = 15;
 var CATEGORIES = [
-	[0.50, 'red', "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss", ["<title>", "</title>"], 3, 20],
-	[0.20, 'green', "http://www.theverge.com/rss/index.xml", ["<title>", "</title>"], 2, 10],
-	[0.10, 'cyan', "http://trends24.in/united-states/", ["<li title=", ">"], 1, 10],
-	[0.20, 'yellow', "https://www.reddit.com/r/gamernews/new/.rss", ["title=", "/&gt;"], 1, 10]
+	[0.40, 'LightCoral', "http://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss", function(data){return parseGoogleNews(data)}],
+	[0.20, 'MediumSeaGreen', "http://www.theverge.com/rss/index.xml", function(data){return parseVergeNews(data)}],
+	[0.10, 'MediumTurquoise', "http://trends24.in/united-states/", function(data){return parseTwitter(data)}],
+	[0.10, 'Khaki', "http://www.reddit.com/r/gamernews/new/.rss", function(data){return parseRedditGamerNews(data)}],
+	[0.10, 'MediumPurple', "https://www.reddit.com/r/all/.rss", function(data){return parseRedditTopPosts(data)}],
+	[0.10, 'WhiteSmoke', "http://github.com/trending", function(data){return parseGithub(data)}]
 ];
 var category_index = 0;
 
@@ -22,7 +22,6 @@ function nextCategory()
 {
 	if(category_index < CATEGORIES.length)
 	{
-		//console.log("GET " + category_index);
 		return CATEGORIES[category_index++];
 	}
 
@@ -37,30 +36,16 @@ function fetchDataFromSource(category)
 		return false;
 	}
 
-	xReader(category[2], function(data) 
-	{ 
+	xReader(category[2], function(data)
+	{
 		if(data.content)
 		{
-			var split = category[3][0];
-			var end = category[3][1];
-			var lines = data.content.split(split);
-			var temp = [];
-			var index = 0;
-
-	    	for(var i = category[4]; i < lines.length && i < (category[5] + category[4]); i++)
-	    	{
-	    		temp[index] = lines[i].substring(0, lines[i].indexOf(end));
-	    		temp[index] = temp[index].replace(/\"/g, "");
-	    		temp[index] = temp[index].replace(/amp;/g, "&");
-	    		index++;
-	    	}
-
+			var temp = category[3](data);
 	    	var required_num_items = Math.ceil(category[0] * MIN_NUM_NEWS_ITEMS);
 	    	if(temp.length <= required_num_items)
 	    	{
 	    		for(var i = 0; i < temp.length; i++)
 	    		{
-	    			//console.log("ADD (" + i + "/" + required_num_items + ") " + temp[i]);
 	    			allNews[allNewsIndex++] = "<font color=\"" + category[1] + "\">" + temp[i] + "</font>&nbsp;\u2022&nbsp;";
 	    		}
 	    	}
@@ -75,7 +60,6 @@ function fetchDataFromSource(category)
 		    			random = Math.floor((Math.random() * temp.length) + 0);
 		    		}
 
-		    		//console.log("ADD (" + i + "/" + required_num_items + ") " + temp[random]);
 		    		allNews[allNewsIndex++] = "<font color=\"" + category[1] + "\">" + temp[random] + "</font>&nbsp;\u2022&nbsp;";
 		    	}
 	    	}
@@ -86,7 +70,7 @@ function fetchDataFromSource(category)
 		}
 
 		fetchDataFromSource(nextCategory());
-	})	
+	})
 }
 
 function containsNewsItem(item)
@@ -128,6 +112,13 @@ function aggregateSources()
 	}
 	news += "</h2>";
 	//console.log(news);
-	document.getElementById('news-content').innerHTML = news;
+
+	$('.marquee').marquee('destroy');
+	$('.marquee').bind('finished', scrollMarquee(news));
+}
+
+function scrollMarquee(news)
+{
+	$('.marquee').html(news);
 	$('.marquee').marquee();
 }

@@ -3,8 +3,8 @@
 		<title>Wall Panel</title>
 		<style>
 			body {
-				background-color:black; 
-				font-family:"Helvetica Neue Light", "Helvetica Neue", Helvetica; 
+				background-color:black;
+				font-family:"Helvetica Neue Light", "Helvetica Neue", Helvetica;
 				padding:20;
 			}
 			h1 {color:white; margin:0; font-size: 450%;}
@@ -46,10 +46,9 @@
 		<script src="js/jquery.marquee.js" type="text/javascript"></script>
 		<script src="js/skycons.js" type="text/javascript"></script>
 		<script src="js/newsAggregate.js" type="text/javascript"></script>
+		<script src="js/newsParsers.js" type="text/javascript"></script>
 		<script src="js/phrases.js" type="text/javascript" charset="utf-8"></script>
-		<link rel="icon" 
-      		type="image/png" 
-      		href="images/icon.png"/>
+		<link rel="icon" type="image/png" href="images/icon.png"/>
 
 		<script>
 			var WEATHER_LAT = "37.4024";
@@ -60,9 +59,7 @@
 			var DAYS_LIST = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 			var skycons;
 
-			var NEWS_RSS_URL = "https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss"
-			var NEWS_RSS_URL_ALT = "http://feeds.reuters.com/reuters/topNews"; //replaced by google news RSS but kept just in case...
-			var NEWS_REFRESH_MINS = 60;
+			var NEWS_REFRESH_MINS = 30;
 
 			var GOOGLE_API_PUBLIC_KEY = "AIzaSyDrYX6fS5dnlZ_ISX5f49MvKF45lpfNfZ0";
 			var GOOGLE_CALENDAR_ID = "dicksoncs@gmail.com";
@@ -89,8 +86,10 @@
 				getNews();
 				getCaltrainDepartures();
 				getCalendar();
-				getTravelTime();
 				getLiveTwitchStreams();
+
+				
+				//getTravelTime();
 				//setupFirebase();
 			}
 
@@ -125,31 +124,31 @@
 			function getLiveTwitchStreams()
 			{
 				TWITCH_GAME = TWITCH_GAME.replace(/ /g, "+");
-				xReader("https://api.twitch.tv/kraken/streams?game=" + TWITCH_GAME + "&limit=" + TWITCH_CHANNEL_LIMIT, function(data) 
-				{ 
-				    parseLiveTwitchStreams(data); 
+				xReader("https://api.twitch.tv/kraken/streams?game=" + TWITCH_GAME + "&limit=" + TWITCH_CHANNEL_LIMIT, function(data)
+				{
+				    parseLiveTwitchStreams(data);
 				})
 
-				var t = setTimeout(getLiveTwitchStreams, TWITCH_REFRESH_MINS * 60 * 1000);	
+				var t = setTimeout(getLiveTwitchStreams, TWITCH_REFRESH_MINS * 60 * 1000);
 			}
 
 			function parseLiveTwitchStreams(data)
 			{
 				var channel_list = "<table style=\"color:white;\">";
 				xml = $.parseXML(data.content);
-				$(xml).find("streams").each(function() 
+				$(xml).find("streams").each(function()
 				{
 					var channel_name = $(this).find("channel").find("display_name").text();
 					var channel_img = $(this).find("channel").find("logo").text();
 					var channel_viewers = $(this).find("viewers").text();
-					
+
 					channel_list += "<tr><td><img src=\"" + channel_img + "\" width=\"25\" height=\"25\"/></td><td>&nbsp;&nbsp;&nbsp;</td><td>" + channel_name + "</td><td>&nbsp;&nbsp;&nbsp;</td><td>" + channel_viewers + "</td></tr>";
 				});
 				channel_list += "</table>";
 				document.getElementById('twitch').innerHTML = channel_list;
 			}
 
-			function startTime() 
+			function startTime()
 			{
 			    var today = new Date();
 			    document.getElementById('date').innerHTML = today.toDateString();
@@ -165,17 +164,17 @@
 			    var t = setTimeout(startTime, 500);
 			}
 
-			function checkTime(i) 
+			function checkTime(i)
 			{
-			    if (i < 10) {i = "0" + i}; 
+			    if (i < 10) {i = "0" + i};
 			    return i;
 			}
 
 			function getCaltrainDepartures()
 			{
-				xReader("http://www.caltrain.com/stations/" + CALTRAIN_STATION_NAME + "station.html", function(data) 
-				{ 
-				    parseCaltrainDepartures(data); 
+				xReader("http://www.caltrain.com/stations/" + CALTRAIN_STATION_NAME + "station.html", function(data)
+				{
+				    parseCaltrainDepartures(data);
 				})
 			}
 
@@ -223,7 +222,7 @@
 						{
 							schedule_hours -= 12;
 						}
-						
+
 						var time = normalizeTimeString(schedule_hours, schedule_minutes);
 						northbound_train_times[nbtt_index] = time;
 						nbtt_index++;
@@ -270,7 +269,7 @@
 						{
 							schedule_hours -= 12;
 						}
-						
+
 						var time = normalizeTimeString(schedule_hours, schedule_minutes);
 						southbound_train_times[sbtt_index] = time;
 						sbtt_index++;
@@ -304,20 +303,19 @@
 				{
 					while(time_string > n_trains[i])
 					{
-						//console.log(time_string + ", " + n_trains[i] + ", " + i);
 						i++;
 					}
-					
+
 				}
 
 				if(i >= n_trains.length)
 				{
 					i = 0;
 				}
-				
+
 				train_string += "<img src=\"images/north_arrow.png\" width=\"20\" height=\"20\"/>&nbsp;";
 				train_string += n_trains[i];
-				
+
 				i = 0;
 				if(hours <= parseInt(s_trains[s_trains.length-1].substring(0, s_trains[s_trains.length-1].indexOf(":"))))
 				{
@@ -334,11 +332,11 @@
 
 				train_string += "&nbsp;<img src=\"images/south_arrow.png\" width=\"20\" height=\"20\"/>&nbsp;";
 				train_string += s_trains[i];
-				
+
 				document.getElementById("next_caltrains").innerHTML = train_string;
 				var t = setTimeout(function(){
 					getNextCaltrainsFromNow(northbound_train_times, southbound_train_times);
-				}, CALTRAIN_DEPARTURE_REFRESH_MINS * 60 * 1000);	
+				}, CALTRAIN_DEPARTURE_REFRESH_MINS * 60 * 1000);
 			}
 
 			function stripAlpha(string)
@@ -362,10 +360,10 @@
 					skycons = new Skycons();
 				}
 
-				xReader("https://api.forecast.io/forecast/" + WEATHER_API_KEY + "/" + WEATHER_LAT + "," + WEATHER_LNG, function(data) 
-				{ 
+				xReader("https://api.forecast.io/forecast/" + WEATHER_API_KEY + "/" + WEATHER_LAT + "," + WEATHER_LNG, function(data)
+				{
 				    parseCurrentWeather(data);
-				    parseForecastWeather(data); 
+				    parseForecastWeather(data);
 				})
 
 				var t = setTimeout(getWeather, WEATHER_REFRESH_MINS * 60 * 1000);
@@ -405,7 +403,7 @@
 					sunset_date = new Date(parseInt($(this).text())*1000);
 					return false;
 				});
-				
+
 				var sunrise_string = normalizeTimeString(sunrise_date.getHours(), sunrise_date.getMinutes());
 				var sunset_string = normalizeTimeString(sunset_date.getHours(), sunset_date.getMinutes());
 
@@ -477,7 +475,7 @@
 				{
 					current_wind_direction_string = "N";
 				}
-				
+
 				document.getElementById("current_weather").innerHTML = current_temp;
 				skycons.set(document.getElementById("weather_icon"), current_icon);
   				skycons.play();
@@ -495,13 +493,13 @@
 				var current_day = now.getDay();
 				var weather_icon_array = [];
 
-				$(xml).find("daily").find("data").each(function() 
+				$(xml).find("daily").find("data").each(function()
 				{
 					weather_icon_array[i++] = $(this).find("icon").text();
 				});
 
 				i = 0;
-				$(xml).find("daily").find("data").each(function() 
+				$(xml).find("daily").find("data").each(function()
 				{
 					if(i > 0 && i <= WEATHER_MAX_FORECAST_DAYS)
 					{
@@ -538,39 +536,17 @@
 			function getNews()
 			{
 				getAggregateNews();
-				/*xReader(NEWS_RSS_URL, function(data) 
-				{ 
-					if(data.content)
-					{
-				    	parseNews(data.content.split("<title>")); 
-					}
-				})*/	
-
 				var t = setTimeout(getNews, NEWS_REFRESH_MINS * 60 * 1000);
-			}
-
-			function parseNews(data)
-			{
-				var news = "<h2>";
-				for(i = 3; i < data.length; i++)
-				{
-					var headline = data[i].substring(0, data[i].indexOf("</title>"));
-					news += headline.substring(0, headline.indexOf("-")-1) + "&nbsp;\u2022&nbsp;";
-				}
-				//document.getElementById('news-content').innerHTML = news;
-				news += "</h2>";
-				document.getElementById('news-content').innerHTML = news;
-				$('.marquee').marquee();
 			}
 
 			function getCalendar()
 			{
 				var now = new Date();
 				var calendar_url = "https://www.googleapis.com/calendar/v3/calendars/" + GOOGLE_CALENDAR_ID + "/events?key=" + GOOGLE_API_PUBLIC_KEY + "&timeMin=" + ISODateString(now);
-				xReader(calendar_url, function(data) 
-				{ 
-				    parseCalendar(data); 
-				})	
+				xReader(calendar_url, function(data)
+				{
+				    parseCalendar(data);
+				})
 
 				var t = setTimeout(getCalendar, GOOGLE_CALENDAR_REFRESH_MINS * 60 * 1000);
 			}
@@ -600,7 +576,7 @@
 				};
 
 				var i = 0;
-				$(xml).find("items").each(function() 
+				$(xml).find("items").each(function()
 				{
 					showTime = true;
 					var start = $(this).find("start").find("dateTime").text();
@@ -618,7 +594,7 @@
 						eventLine = event_date.toLocaleDateString("en-us", date_options);
 					}
 
-				    events[i++] = "<li>" + eventLine + " -- " + title + "</li>"; 
+				    events[i++] = "<li>" + eventLine + " -- " + title + "</li>";
 				});
 
 				/*var current_num_events = 0;
@@ -640,7 +616,7 @@
 				}
 
 
-				event_string += "</ul>"; 
+				event_string += "</ul>";
 				document.getElementById('calendar').innerHTML = event_string;
 			}
 
@@ -650,10 +626,10 @@
 				GOOGLE_MAPS_DESTINATION = GOOGLE_MAPS_DESTINATION.replace(/ /g, "+");
 				var unix_epoch_time = (new Date).getTime();
 				var directions_url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + GOOGLE_MAPS_ORIGIN + "&destination=" + GOOGLE_MAPS_DESTINATION + "&departure_time=" + unix_epoch_time + "&key=" + GOOGLE_API_PUBLIC_KEY;
-				xReader(directions_url, function(data) 
-				{ 
-				    parseTravelTime(data); 
-				})	
+				xReader(directions_url, function(data)
+				{
+				    parseTravelTime(data);
+				})
 
 				var t = setTimeout(getTravelTime, GOOGLE_MAPS_REFRESH_MINS * 60 * 1000);
 			}
@@ -699,7 +675,7 @@
 		</div>
 		<h2><div id="greeting"></div></h2>
 		<div id="news-scroll" align="center">
-			<div id="news-content" class="marquee" data-duplicated='true'><font color="red"></font></div>
+			<div id="news-content" class="marquee" data-duplicated='true'></div>
 		</div>
 	</body>
 </html>
