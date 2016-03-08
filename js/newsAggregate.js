@@ -104,7 +104,11 @@ function shuffle(a) {
 function aggregateSources()
 {
 	console.log("DONE AGGREGATING NEWS");
-	shuffle(allNews);
+	for(var i = 0; i < Math.floor((Math.random() * 5) + 1); i++)
+	{
+		shuffle(allNews);
+	}
+
 	var news = "<h2>";
 	for(var i = 0; i < allNews.length; i++)
 	{
