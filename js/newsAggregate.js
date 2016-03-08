@@ -5,6 +5,7 @@
 	Function in newsParsers.js to handle parsing raw rss
 */
 var MIN_NUM_NEWS_ITEMS = 15;
+var MAX_NUM_SHUFFLES = 3;
 var CATEGORIES = [
 	[0.40, 'LightCoral', "http://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss", function(data){return parseGoogleNews(data)}],
 	[0.20, 'MediumSeaGreen', "http://www.theverge.com/rss/index.xml", function(data){return parseVergeNews(data)}],
@@ -104,7 +105,7 @@ function shuffle(a) {
 function aggregateSources()
 {
 	console.log("DONE AGGREGATING NEWS");
-	for(var i = 0; i < Math.floor((Math.random() * 5) + 1); i++)
+	for(var i = 0; i < Math.floor((Math.random() * MAX_NUM_SHUFFLES) + 1); i++)
 	{
 		shuffle(allNews);
 	}
